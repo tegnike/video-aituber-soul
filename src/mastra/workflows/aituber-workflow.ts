@@ -119,24 +119,36 @@ const filterCommentStep = createStep({
     shouldRespond: z.boolean(),
   }),
   execute: async ({ inputData, mastra }) => {
+    // 初見視聴者は必ず応答する
+    if (inputData.isFirstTime) {
+      return { ...inputData, shouldRespond: true };
+    }
+
     const agent = mastra?.getAgent('commentFilterAgent');
     if (!agent) {
       return { ...inputData, shouldRespond: true };
     }
 
-    const result = await agent.generate([
-      { role: 'user', content: inputData.comment },
-    ]);
-
-    let shouldRespond = true;
     try {
-      const parsed = JSON.parse(result.text);
-      shouldRespond = parsed.shouldRespond ?? true;
-    } catch {
-      shouldRespond = true;
-    }
+      const result = await agent.generate([
+        { role: 'user', content: inputData.comment },
+      ]);
 
-    return { ...inputData, shouldRespond };
+      let shouldRespond = true;
+      try {
+        const parsed = JSON.parse(result.text);
+        shouldRespond = typeof parsed?.shouldRespond === 'boolean'
+          ? parsed.shouldRespond
+          : true;
+      } catch {
+        shouldRespond = true;
+      }
+
+      return { ...inputData, shouldRespond };
+    } catch (error) {
+      console.error('Comment filter failed, defaulting to respond:', error);
+      return { ...inputData, shouldRespond: true };
+    }
   },
 });
 
