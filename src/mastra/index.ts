@@ -7,6 +7,7 @@ import { aituberWorkflow } from './workflows/aituber-workflow';
 import { weatherAgent } from './agents/weather-agent';
 import { aituberAgent } from './agents/aituber-agent';
 import { readingGeneratorAgent } from './agents/reading-generator-agent';
+import { commentFilterAgent } from './agents/comment-filter-agent';
 import { toolCallAppropriatenessScorer, completenessScorer, translationScorer } from './scorers/weather-scorer';
 
 // セッション管理関数をエクスポート
@@ -20,7 +21,7 @@ export {
 
 export const mastra = new Mastra({
   workflows: { weatherWorkflow, aituberWorkflow },
-  agents: { weatherAgent, aituberAgent, readingGeneratorAgent },
+  agents: { weatherAgent, aituberAgent, readingGeneratorAgent, commentFilterAgent },
   scorers: { toolCallAppropriatenessScorer, completenessScorer, translationScorer },
   storage: new LibSQLStore({
     url: "file:../mastra.db",

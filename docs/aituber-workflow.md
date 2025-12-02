@@ -9,13 +9,15 @@ VTuber配信でのコメント応答を処理するMastraワークフロー。
     ↓
 [1. check-viewer] → readingGeneratorAgent
     ↓
-[2. build-context]
+[2. filter-comment] → commentFilterAgent
+    ↓ (shouldRespond: false → スキップ)
+[3. build-context]
     ↓
-[3. generate-response] → aituberAgent
+[4. generate-response] → aituberAgent
     ↓
-[4. save-conversation]
+[5. save-conversation]
     ↓
-[出力: response, usernameReading, isFirstTime]
+[出力: response, usernameReading, isFirstTime, shouldRespond]
 ```
 
 ## ステップ詳細
@@ -23,6 +25,7 @@ VTuber配信でのコメント応答を処理するMastraワークフロー。
 | ステップ | 処理内容 | 使用エージェント |
 |---------|---------|-----------------|
 | check-viewer | セッション確認、視聴者確認、読み仮名生成 | readingGeneratorAgent |
+| filter-comment | コメントが返答に値するか判定 | commentFilterAgent |
 | build-context | 直近50件の会話履歴からコンテキスト構築 | - |
 | generate-response | VTuberとして応答生成 | aituberAgent |
 | save-conversation | 会話履歴をDBに保存 | - |
@@ -43,7 +46,8 @@ VTuber配信でのコメント応答を処理するMastraワークフロー。
 {
   response: string,        // AITuberの応答
   usernameReading: string, // 視聴者名の読み（カタカナ）
-  isFirstTime: boolean     // 初見かどうか
+  isFirstTime: boolean,    // 初見かどうか
+  shouldRespond: boolean   // 応答したかどうか
 }
 ```
 
@@ -64,6 +68,18 @@ VTuber配信でのコメント応答を処理するMastraワークフロー。
 ```
 入力: ユーザー名
 出力: カタカナ読み
+```
+
+### commentFilterAgent
+
+コメントが返答に値するか判定する。
+
+```
+入力: コメント内容
+出力: {"shouldRespond": true/false}
+
+返答不要: 「あ」「ふーん」「絵文字のみ」「記号のみ」など
+返答必要: 質問、挨拶、感想、意見など
 ```
 
 ### aituberAgent

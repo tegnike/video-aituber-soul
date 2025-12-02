@@ -21,6 +21,7 @@ const outputSchema = z.object({
   response: z.string().describe('AITuberの応答'),
   usernameReading: z.string().describe('視聴者名の読み'),
   isFirstTime: z.boolean().describe('初見かどうか'),
+  shouldRespond: z.boolean().describe('応答したかどうか'),
 });
 
 // Step 1: 視聴者確認・読み仮名生成
@@ -96,10 +97,10 @@ const checkViewerStep = createStep({
   },
 });
 
-// Step 2: コンテキスト構築
-const buildContextStep = createStep({
-  id: 'build-context',
-  description: '会話履歴からコンテキストを構築',
+// Step 2: コメントフィルタリング
+const filterCommentStep = createStep({
+  id: 'filter-comment',
+  description: 'コメントが返答に値するか判定',
   inputSchema: z.object({
     sessionId: z.string(),
     username: z.string(),
@@ -114,11 +115,69 @@ const buildContextStep = createStep({
     usernameReading: z.string(),
     comment: z.string(),
     isFirstTime: z.boolean(),
+    streamTitle: z.string(),
+    shouldRespond: z.boolean(),
+  }),
+  execute: async ({ inputData, mastra }) => {
+    const agent = mastra?.getAgent('commentFilterAgent');
+    if (!agent) {
+      return { ...inputData, shouldRespond: true };
+    }
+
+    const result = await agent.generate([
+      { role: 'user', content: inputData.comment },
+    ]);
+
+    let shouldRespond = true;
+    try {
+      const parsed = JSON.parse(result.text);
+      shouldRespond = parsed.shouldRespond ?? true;
+    } catch {
+      shouldRespond = true;
+    }
+
+    return { ...inputData, shouldRespond };
+  },
+});
+
+// Step 3: コンテキスト構築
+const buildContextStep = createStep({
+  id: 'build-context',
+  description: '会話履歴からコンテキストを構築',
+  inputSchema: z.object({
+    sessionId: z.string(),
+    username: z.string(),
+    usernameReading: z.string(),
+    comment: z.string(),
+    isFirstTime: z.boolean(),
+    streamTitle: z.string(),
+    shouldRespond: z.boolean(),
+  }),
+  outputSchema: z.object({
+    sessionId: z.string(),
+    username: z.string(),
+    usernameReading: z.string(),
+    comment: z.string(),
+    isFirstTime: z.boolean(),
     context: z.string(),
+    shouldRespond: z.boolean(),
   }),
   execute: async ({ inputData }) => {
-    const { sessionId, username, usernameReading, comment, isFirstTime, streamTitle } =
+    const { sessionId, username, usernameReading, comment, isFirstTime, streamTitle, shouldRespond } =
       inputData;
+
+    // フィルタリングでスキップ対象の場合
+    if (!shouldRespond) {
+      return {
+        sessionId,
+        username,
+        usernameReading,
+        comment,
+        isFirstTime,
+        context: '',
+        shouldRespond,
+      };
+    }
 
     // 会話履歴を取得（直近50件）
     const conversations = await getConversations(sessionId, 50);
@@ -145,11 +204,12 @@ ${username}さん（読み: ${usernameReading}）${isFirstTime ? '【初見】' 
       comment,
       isFirstTime,
       context,
+      shouldRespond,
     };
   },
 });
 
-// Step 3: 応答生成
+// Step 4: 応答生成
 const generateResponseStep = createStep({
   id: 'generate-response',
   description: 'AITuberとして応答を生成',
@@ -160,6 +220,7 @@ const generateResponseStep = createStep({
     comment: z.string(),
     isFirstTime: z.boolean(),
     context: z.string(),
+    shouldRespond: z.boolean(),
   }),
   outputSchema: z.object({
     sessionId: z.string(),
@@ -168,10 +229,24 @@ const generateResponseStep = createStep({
     comment: z.string(),
     response: z.string(),
     isFirstTime: z.boolean(),
+    shouldRespond: z.boolean(),
   }),
   execute: async ({ inputData, mastra }) => {
-    const { sessionId, username, usernameReading, comment, isFirstTime, context } =
+    const { sessionId, username, usernameReading, comment, isFirstTime, context, shouldRespond } =
       inputData;
+
+    // フィルタリングでスキップ対象の場合
+    if (!shouldRespond) {
+      return {
+        sessionId,
+        username,
+        usernameReading,
+        comment,
+        response: '',
+        isFirstTime,
+        shouldRespond,
+      };
+    }
 
     const agent = mastra?.getAgent('aituberAgent');
     if (!agent) {
@@ -191,11 +266,12 @@ ${isFirstTime ? '\n※この視聴者は初見です' : ''}`;
       comment,
       response: result.text.trim(),
       isFirstTime,
+      shouldRespond,
     };
   },
 });
 
-// Step 4: 会話保存
+// Step 5: 会話保存
 const saveConversationStep = createStep({
   id: 'save-conversation',
   description: '会話履歴をDBに保存',
@@ -206,11 +282,22 @@ const saveConversationStep = createStep({
     comment: z.string(),
     response: z.string(),
     isFirstTime: z.boolean(),
+    shouldRespond: z.boolean(),
   }),
   outputSchema,
   execute: async ({ inputData }) => {
-    const { sessionId, username, usernameReading, comment, response, isFirstTime } =
+    const { sessionId, username, usernameReading, comment, response, isFirstTime, shouldRespond } =
       inputData;
+
+    // フィルタリングでスキップ対象の場合は保存しない
+    if (!shouldRespond) {
+      return {
+        response: '',
+        usernameReading,
+        isFirstTime,
+        shouldRespond,
+      };
+    }
 
     // 会話履歴を保存
     await addConversation(sessionId, username, comment, response);
@@ -219,6 +306,7 @@ const saveConversationStep = createStep({
       response,
       usernameReading,
       isFirstTime,
+      shouldRespond,
     };
   },
 });
@@ -230,6 +318,7 @@ const aituberWorkflow = createWorkflow({
   outputSchema,
 })
   .then(checkViewerStep)
+  .then(filterCommentStep)
   .then(buildContextStep)
   .then(generateResponseStep)
   .then(saveConversationStep);
