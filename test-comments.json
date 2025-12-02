@@ -1,0 +1,159 @@
+{
+  "batches": [
+    {
+      "batch": 1,
+      "comments": [
+        { "username": "ゲーマー太郎", "comment": "初見です！よろしくお願いします" },
+        { "username": "ピカチュウ推し子", "comment": "こんばんは〜！" },
+        { "username": "まったり視聴のさくら", "comment": "こんばんは、今日も来ました" },
+        { "username": "懐古厨おじさん", "comment": "おっ、赤緑か！懐かしい" },
+        { "username": "草生やすマン", "comment": "きたああああ" },
+        { "username": "エモいコメント担当", "comment": "こんばんわ" }
+      ]
+    },
+    {
+      "batch": 2,
+      "comments": [
+        { "username": "ゲーマー太郎", "comment": "ポケモン懐かしい〜" },
+        { "username": "質問マンたけし", "comment": "初見です" },
+        { "username": "質問マンたけし", "comment": "これ何のゲーム？" },
+        { "username": "攻略wiki見てる人", "comment": "こんちゃ" },
+        { "username": "懐古厨おじさん", "comment": "発売日に買ったわ" },
+        { "username": "RTA勢のケン", "comment": "やぁ" },
+        { "username": "無言勢（レア発言）", "comment": "..." }
+      ]
+    },
+    {
+      "batch": 3,
+      "comments": [
+        { "username": "ピカチュウ推し子", "comment": "ピカチュウはトキワの森にいるよ！" },
+        { "username": "エモいコメント担当", "comment": "ポケモンって人生だよね" },
+        { "username": "ゲーマー太郎", "comment": "俺も赤派だったわ" },
+        { "username": "まったり視聴のさくら", "comment": "作業しながら聞いてます" },
+        { "username": "懐古厨おじさん", "comment": "当時小学生だったなぁ" },
+        { "username": "草生やすマン", "comment": "ｗｗｗｗｗ" },
+        { "username": "質問マンたけし", "comment": "ポケモンって何匹いるの？" },
+        { "username": "攻略wiki見てる人", "comment": "次のジムはハナダだよ" }
+      ]
+    },
+    {
+      "batch": 4,
+      "comments": [
+        { "username": "ゲーマー太郎", "comment": "ヒトカゲ選ぶの？" },
+        { "username": "エモいコメント担当", "comment": "最初の一匹、迷うよね..." },
+        { "username": "ピカチュウ推し子", "comment": "絶対ピカチュウ捕まえてね" },
+        { "username": "RTA勢のケン", "comment": "ここはAボタン連打でスキップできる" },
+        { "username": "まったり視聴のさくら", "comment": "BGM懐かしいなぁ" }
+      ]
+    },
+    {
+      "batch": 5,
+      "comments": [
+        { "username": "質問マンたけし", "comment": "151匹！多いな" },
+        { "username": "懐古厨おじさん", "comment": "通信ケーブルで交換したもんだ" },
+        { "username": "草生やすマン", "comment": "それはｗｗｗ" },
+        { "username": "エモいコメント担当", "comment": "旅立ちの音楽泣ける" },
+        { "username": "攻略wiki見てる人", "comment": "カスミはスターミーが強い" },
+        { "username": "ピカチュウ推し子", "comment": "かわいい〜〜〜" },
+        { "username": "RTA勢のケン", "comment": "おつかいイベントはダルいよなw" },
+        { "username": "無言勢（レア発言）", "comment": "いつも見てます" },
+        { "username": "まったり視聴のさくら", "comment": "私は緑版やってた" }
+      ]
+    },
+    {
+      "batch": 6,
+      "comments": [
+        { "username": "ゲーマー太郎", "comment": "タケシ戦きついぞｗ" },
+        { "username": "RTA勢のケン", "comment": "トキワシティでキャタピー狩りが効率いい" },
+        { "username": "攻略wiki見てる人", "comment": "レベル25くらいあれば勝てる" },
+        { "username": "懐古厨おじさん", "comment": "ゲームボーイの電池すぐ切れたよな" },
+        { "username": "草生やすマン", "comment": "やらかしたｗｗｗ" }
+      ]
+    },
+    {
+      "batch": 7,
+      "comments": [
+        { "username": "ピカチュウ推し子", "comment": "ピカチュウに電光石火覚えさせて！" },
+        { "username": "質問マンたけし", "comment": "ミュウってどうやって取るの？" },
+        { "username": "エモいコメント担当", "comment": "ライバルとの絆..." },
+        { "username": "まったり視聴のさくら", "comment": "サンドが好きだった" },
+        { "username": "攻略wiki見てる人", "comment": "そこの草むらでピッピ出るよ" },
+        { "username": "RTA勢のケン", "comment": "いや、そこ右行った方が早い" },
+        { "username": "懐古厨おじさん", "comment": "今の子は恵まれてるわ" }
+      ]
+    },
+    {
+      "batch": 8,
+      "comments": [
+        { "username": "草生やすマン", "comment": "全滅ｗｗｗｗｗ" },
+        { "username": "ゲーマー太郎", "comment": "ニドラン捕まえた方がいいよ" },
+        { "username": "ピカチュウ推し子", "comment": "やったー！ゲットだぜ！" },
+        { "username": "質問マンたけし", "comment": "バグ技あるの？" },
+        { "username": "エモいコメント担当", "comment": "ポケモンと一緒に成長するんだ" },
+        { "username": "攻略wiki見てる人", "comment": "技マシン見逃さないでね" }
+      ]
+    },
+    {
+      "batch": 9,
+      "comments": [
+        { "username": "RTA勢のケン", "comment": "RTAだと3時間切れるんだぜ" },
+        { "username": "まったり視聴のさくら", "comment": "癒される配信だ〜" },
+        { "username": "懐古厨おじさん", "comment": "ポリゴンショック覚えてる？" },
+        { "username": "草生やすマン", "comment": "ドンマイｗ" },
+        { "username": "ピカチュウ推し子", "comment": "ニケちゃんの声かわいい" },
+        { "username": "無言勢（レア発言）", "comment": "頑張って" },
+        { "username": "質問マンたけし", "comment": "へー、知らなかった" },
+        { "username": "攻略wiki見てる人", "comment": "あ、そこ隠しアイテムある" }
+      ]
+    },
+    {
+      "batch": 10,
+      "comments": [
+        { "username": "ゲーマー太郎", "comment": "お、レベル上がった！" },
+        { "username": "エモいコメント担当", "comment": "この先にどんな出会いがあるんだろう" },
+        { "username": "RTA勢のケン", "comment": "まあエンジョイ勢も楽しいよな" },
+        { "username": "まったり視聴のさくら", "comment": "ニケちゃんって何歳？" },
+        { "username": "懐古厨おじさん", "comment": "あれは衝撃だった" },
+        { "username": "草生やすマン", "comment": "いけるいけるｗ" }
+      ]
+    },
+    {
+      "batch": 11,
+      "comments": [
+        { "username": "ピカチュウ推し子", "comment": "ピカチュウをパーティに入れて〜" },
+        { "username": "攻略wiki見てる人", "comment": "げんきのかけら拾っとけ" },
+        { "username": "まったり視聴のさくら", "comment": "え、17歳！若い！" },
+        { "username": "RTA勢のケン", "comment": "カスミ戦はフシギダネいると楽" },
+        { "username": "エモいコメント担当", "comment": "冒険っていいよね" },
+        { "username": "質問マンたけし", "comment": "ありがとう！勉強になった" },
+        { "username": "草生やすマン", "comment": "神回ｗｗｗ" }
+      ]
+    },
+    {
+      "batch": 12,
+      "comments": [
+        { "username": "懐古厨おじさん", "comment": "昔話すまんな、楽しんでくれ" },
+        { "username": "攻略wiki見てる人", "comment": "wiki見ながら応援してる" },
+        { "username": "エモいコメント担当", "comment": "ニケちゃんの配信見ると元気出る" },
+        { "username": "ピカチュウ推し子", "comment": "今日はここまで？" },
+        { "username": "無言勢（レア発言）", "comment": "..." }
+      ]
+    },
+    {
+      "batch": 13,
+      "comments": [
+        { "username": "ゲーマー太郎", "comment": "今日も楽しかった、またね！" },
+        { "username": "ピカチュウ推し子", "comment": "おつかれさま！次回も楽しみ！" },
+        { "username": "RTA勢のケン", "comment": "乙" },
+        { "username": "まったり視聴のさくら", "comment": "また来週も来ますね" },
+        { "username": "懐古厨おじさん", "comment": "また来るわ" },
+        { "username": "エモいコメント担当", "comment": "ありがとう、今日も良い夜だ" },
+        { "username": "攻略wiki見てる人", "comment": "おつー" },
+        { "username": "草生やすマン", "comment": "くさ" },
+        { "username": "草生やすマン", "comment": "面白かったｗまたな！" },
+        { "username": "まったり視聴のさくら", "comment": "おやすみなさい〜" },
+        { "username": "無言勢（レア発言）", "comment": "おつ" }
+      ]
+    }
+  ]
+}
