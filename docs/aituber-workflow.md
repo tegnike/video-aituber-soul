@@ -10,7 +10,7 @@ VTuber配信でのコメント応答を処理するMastraワークフロー。
 [1. check-viewer] → readingGeneratorAgent
     ↓
 [2. filter-comment] → commentFilterAgent
-    ↓ (shouldRespond: false → スキップ)
+    ↓ (shouldRespond: false → bail()で早期終了)
 [3. build-context]
     ↓
 [4. generate-response] → aituberAgent

@@ -116,17 +116,16 @@ const filterCommentStep = createStep({
     comment: z.string(),
     isFirstTime: z.boolean(),
     streamTitle: z.string(),
-    shouldRespond: z.boolean(),
   }),
-  execute: async ({ inputData, mastra }) => {
+  execute: async ({ inputData, mastra, bail }) => {
     // 初見視聴者は必ず応答する
     if (inputData.isFirstTime) {
-      return { ...inputData, shouldRespond: true };
+      return inputData;
     }
 
     const agent = mastra?.getAgent('commentFilterAgent');
     if (!agent) {
-      return { ...inputData, shouldRespond: true };
+      return inputData;
     }
 
     try {
@@ -144,10 +143,20 @@ const filterCommentStep = createStep({
         shouldRespond = true;
       }
 
-      return { ...inputData, shouldRespond };
+      // 応答不要の場合は早期終了
+      if (!shouldRespond) {
+        return bail({
+          response: '',
+          usernameReading: inputData.usernameReading,
+          isFirstTime: inputData.isFirstTime,
+          shouldRespond: false,
+        });
+      }
+
+      return inputData;
     } catch (error) {
       console.error('Comment filter failed, defaulting to respond:', error);
-      return { ...inputData, shouldRespond: true };
+      return inputData;
     }
   },
 });
@@ -163,7 +172,6 @@ const buildContextStep = createStep({
     comment: z.string(),
     isFirstTime: z.boolean(),
     streamTitle: z.string(),
-    shouldRespond: z.boolean(),
   }),
   outputSchema: z.object({
     sessionId: z.string(),
@@ -172,24 +180,10 @@ const buildContextStep = createStep({
     comment: z.string(),
     isFirstTime: z.boolean(),
     context: z.string(),
-    shouldRespond: z.boolean(),
   }),
   execute: async ({ inputData }) => {
-    const { sessionId, username, usernameReading, comment, isFirstTime, streamTitle, shouldRespond } =
+    const { sessionId, username, usernameReading, comment, isFirstTime, streamTitle } =
       inputData;
-
-    // フィルタリングでスキップ対象の場合
-    if (!shouldRespond) {
-      return {
-        sessionId,
-        username,
-        usernameReading,
-        comment,
-        isFirstTime,
-        context: '',
-        shouldRespond,
-      };
-    }
 
     // 会話履歴を取得（直近50件）
     const conversations = await getConversations(sessionId, 50);
@@ -216,7 +210,6 @@ ${username}さん（読み: ${usernameReading}）${isFirstTime ? '【初見】' 
       comment,
       isFirstTime,
       context,
-      shouldRespond,
     };
   },
 });
@@ -232,7 +225,6 @@ const generateResponseStep = createStep({
     comment: z.string(),
     isFirstTime: z.boolean(),
     context: z.string(),
-    shouldRespond: z.boolean(),
   }),
   outputSchema: z.object({
     sessionId: z.string(),
@@ -241,24 +233,10 @@ const generateResponseStep = createStep({
     comment: z.string(),
     response: z.string(),
     isFirstTime: z.boolean(),
-    shouldRespond: z.boolean(),
   }),
   execute: async ({ inputData, mastra }) => {
-    const { sessionId, username, usernameReading, comment, isFirstTime, context, shouldRespond } =
+    const { sessionId, username, usernameReading, comment, isFirstTime, context } =
       inputData;
-
-    // フィルタリングでスキップ対象の場合
-    if (!shouldRespond) {
-      return {
-        sessionId,
-        username,
-        usernameReading,
-        comment,
-        response: '',
-        isFirstTime,
-        shouldRespond,
-      };
-    }
 
     const agent = mastra?.getAgent('aituberAgent');
     if (!agent) {
@@ -278,7 +256,6 @@ ${isFirstTime ? '\n※この視聴者は初見です' : ''}`;
       comment,
       response: result.text.trim(),
       isFirstTime,
-      shouldRespond,
     };
   },
 });
@@ -294,22 +271,11 @@ const saveConversationStep = createStep({
     comment: z.string(),
     response: z.string(),
     isFirstTime: z.boolean(),
-    shouldRespond: z.boolean(),
   }),
   outputSchema,
   execute: async ({ inputData }) => {
-    const { sessionId, username, usernameReading, comment, response, isFirstTime, shouldRespond } =
+    const { sessionId, username, usernameReading, comment, response, isFirstTime } =
       inputData;
-
-    // フィルタリングでスキップ対象の場合は保存しない
-    if (!shouldRespond) {
-      return {
-        response: '',
-        usernameReading,
-        isFirstTime,
-        shouldRespond,
-      };
-    }
 
     // 会話履歴を保存
     await addConversation(sessionId, username, comment, response);
@@ -318,7 +284,7 @@ const saveConversationStep = createStep({
       response,
       usernameReading,
       isFirstTime,
-      shouldRespond,
+      shouldRespond: true,
     };
   },
 });
