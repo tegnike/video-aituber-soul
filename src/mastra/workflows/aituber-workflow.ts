@@ -5,8 +5,7 @@ import {
   addViewer,
   getConversations,
   addConversation,
-  getSession,
-  startSession,
+  getOrCreateSession,
 } from '../lib/session-store';
 
 // 入力スキーマ
@@ -19,6 +18,7 @@ const inputSchema = z.object({
 // 出力スキーマ
 const outputSchema = z.object({
   response: z.string().describe('AITuberの応答'),
+  emotion: z.string().describe('応答時の感情'),
   usernameReading: z.string().describe('視聴者名の読み'),
   isFirstTime: z.boolean().describe('初見かどうか'),
   shouldRespond: z.boolean().describe('応答したかどうか'),
@@ -41,25 +41,15 @@ const checkViewerStep = createStep({
     const { sessionId, username, comment } = inputData;
 
     // セッション確認（無ければ自動作成）
-    let session = await getSession(sessionId);
-    let actualSessionId = sessionId;
-
-    if (!session) {
-      // セッションが見つからない場合は新規作成
-      actualSessionId = await startSession(sessionId || '配信');
-      session = await getSession(actualSessionId);
-      if (!session) {
-        throw new Error('Failed to create session');
-      }
-    }
+    const session = await getOrCreateSession(sessionId);
 
     // 視聴者確認
-    const existingViewer = await getViewer(actualSessionId, username);
+    const existingViewer = await getViewer(sessionId, username);
 
     if (existingViewer) {
       // 既存視聴者
       return {
-        sessionId: actualSessionId,
+        sessionId,
         username,
         usernameReading: existingViewer.usernameReading,
         comment,
@@ -84,10 +74,10 @@ const checkViewerStep = createStep({
     const usernameReading = result.text.trim();
 
     // 視聴者をDBに追加
-    await addViewer(actualSessionId, username, usernameReading);
+    await addViewer(sessionId, username, usernameReading);
 
     return {
-      sessionId: actualSessionId,
+      sessionId,
       username,
       usernameReading,
       comment,
@@ -147,6 +137,7 @@ const filterCommentStep = createStep({
       if (!shouldRespond) {
         return bail({
           response: '',
+          emotion: 'neutral',
           usernameReading: inputData.usernameReading,
           isFirstTime: inputData.isFirstTime,
           shouldRespond: false,
@@ -232,6 +223,7 @@ const generateResponseStep = createStep({
     usernameReading: z.string(),
     comment: z.string(),
     response: z.string(),
+    emotion: z.string(),
     isFirstTime: z.boolean(),
   }),
   execute: async ({ inputData, mastra }) => {
@@ -249,12 +241,31 @@ ${isFirstTime ? '\n※この視聴者は初見です' : ''}`;
 
     const result = await agent.generate([{ role: 'user', content: prompt }]);
 
+    // JSONパース（エージェントはJSON形式で応答、```json```でラップされる場合あり）
+    let response = '';
+    let emotion = 'neutral';
+    try {
+      let jsonText = result.text.trim();
+      // ```json ... ``` でラップされている場合は除去
+      const jsonMatch = jsonText.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (jsonMatch) {
+        jsonText = jsonMatch[1].trim();
+      }
+      const parsed = JSON.parse(jsonText);
+      response = parsed.response || '';
+      emotion = parsed.emotion || 'neutral';
+    } catch {
+      // JSONパース失敗時はテキストそのまま使用
+      response = result.text.trim();
+    }
+
     return {
       sessionId,
       username,
       usernameReading,
       comment,
-      response: result.text.trim(),
+      response,
+      emotion,
       isFirstTime,
     };
   },
@@ -270,11 +281,12 @@ const saveConversationStep = createStep({
     usernameReading: z.string(),
     comment: z.string(),
     response: z.string(),
+    emotion: z.string(),
     isFirstTime: z.boolean(),
   }),
   outputSchema,
   execute: async ({ inputData }) => {
-    const { sessionId, username, usernameReading, comment, response, isFirstTime } =
+    const { sessionId, username, usernameReading, comment, response, emotion, isFirstTime } =
       inputData;
 
     // 会話履歴を保存
@@ -282,6 +294,7 @@ const saveConversationStep = createStep({
 
     return {
       response,
+      emotion,
       usernameReading,
       isFirstTime,
       shouldRespond: true,

@@ -128,6 +128,34 @@ export async function getSession(sessionId: string): Promise<Session | null> {
   };
 }
 
+export async function getOrCreateSession(
+  sessionId: string,
+  streamTitle: string = '配信',
+): Promise<Session> {
+  await ensureInitialized();
+  const db = getClient();
+
+  // 既存セッションを確認
+  const existing = await getSession(sessionId);
+  if (existing) {
+    return existing;
+  }
+
+  // 新規作成
+  const startedAt = new Date().toISOString();
+  await db.execute({
+    sql: 'INSERT INTO sessions (id, stream_title, started_at) VALUES (?, ?, ?)',
+    args: [sessionId, streamTitle, startedAt],
+  });
+
+  return {
+    id: sessionId,
+    streamTitle,
+    startedAt,
+    endedAt: null,
+  };
+}
+
 // 視聴者操作
 export async function getViewer(
   sessionId: string,

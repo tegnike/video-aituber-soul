@@ -34,7 +34,7 @@ VTuber配信でのコメント応答を処理するMastraワークフロー。
 
 ```typescript
 {
-  sessionId: string,  // 配信セッションID（無効なら自動作成）
+  sessionId: string,  // 配信セッションID（存在しなければそのIDで自動作成）
   username: string,   // 視聴者名
   comment: string     // コメント内容
 }
@@ -100,21 +100,81 @@ VTuber「ニケ」としてコメントに応答する。
 ## 使用例
 
 ```typescript
-import { startSession, endSession } from './lib/session-store';
-
-// 配信開始
-const sessionId = await startSession("朝の雑談配信");
-
-// コメント処理
+// sessionIdは任意の文字列でOK（存在しなければ自動作成）
 const result = await aituberWorkflow.createRun().start({
   inputData: {
-    sessionId,
+    sessionId: "my-stream-2024",
     username: "太郎_xyz",
     comment: "こんにちは！"
   }
 });
 // → { response: "タロウさん、こんにちは！...", usernameReading: "タロウ", isFirstTime: true }
 
-// 配信終了
+// タイトル付きセッションを事前に作成する場合
+import { startSession, endSession } from './lib/session-store';
+const sessionId = await startSession("朝の雑談配信");
+// ... ワークフロー実行 ...
 await endSession(sessionId);
 ```
+
+## REST API
+
+Mastraサーバー起動後、以下のエンドポイントでワークフローを実行できます。
+
+### サーバー起動
+
+```bash
+npm run dev   # 開発サーバー (http://localhost:4111)
+npm run start # 本番サーバー
+```
+
+### エンドポイント一覧
+
+| メソッド | エンドポイント | 説明 |
+|---------|---------------|------|
+| POST | `/api/workflows/aituber-workflow/start-async` | 同期実行（結果を待つ） |
+| POST | `/api/workflows/aituber-workflow/start` | 非同期実行（即座に返却） |
+| POST | `/api/workflows/aituber-workflow/stream` | ストリーミング実行 |
+
+### リクエスト例
+
+```bash
+curl -X POST http://localhost:4111/api/workflows/aituber-workflow/start-async \
+  -H "Content-Type: application/json" \
+  -d '{
+    "inputData": {
+      "sessionId": "session-001",
+      "username": "太郎_xyz",
+      "comment": "こんにちは！"
+    }
+  }'
+```
+
+### レスポンス例
+
+**応答する場合（shouldRespond: true）**
+
+```json
+{
+  "response": "タロウさん、こんにちは！今日も配信に来てくれてありがとうございます。",
+  "usernameReading": "タロウ",
+  "isFirstTime": true,
+  "shouldRespond": true
+}
+```
+
+**応答しない場合（shouldRespond: false）**
+
+```json
+{
+  "response": "",
+  "usernameReading": "タロウ",
+  "isFirstTime": false,
+  "shouldRespond": false
+}
+```
+
+### OpenAPI / Swagger
+
+- OpenAPI仕様: `http://localhost:4111/openapi.json`
+- Swagger UI: `http://localhost:4111/swagger-ui`
