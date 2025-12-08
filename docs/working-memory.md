@@ -26,7 +26,7 @@ Source: https://mastra.ai/ja/docs/memory/working-memory
 作業メモリを備えたエージェントをセットアップする最小構成の例は次のとおりです： 
 
 ```
-import { Agent } from "@mastra/core/agent";import { Memory } from "@mastra/memory";import { openai } from "@ai-sdk/openai";// ワーキングメモリを有効にしてエージェントを作成const agent = new Agent({  name: "PersonalAssistant",  instructions: "あなたは頼れるパーソナルアシスタントです。",  model: openai("gpt-4o"),  memory: new Memory({    options: {      workingMemory: {        enabled: true,      },    },  }),});
+import { Agent } from "@mastra/core/agent";import { Memory } from "@mastra/memory";import { openai } from "@ai-sdk/openai";// ワーキングメモリを有効にしてエージェントを作成const agent = new Agent({  name: "PersonalAssistant",  instructions: "あなたは頼れるパーソナルアシスタントです。",  model: openai("gpt-4.1"),  memory: new Memory({    options: {      workingMemory: {        enabled: true,      },    },  }),});
 ```
 
 ## 仕組み​

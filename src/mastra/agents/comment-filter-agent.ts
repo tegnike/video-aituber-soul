@@ -19,5 +19,5 @@ export const commentFilterAgent = new Agent({
 
 JSON形式で出力: {"shouldRespond": true/false}
 `,
-  model: 'openai/gpt-4o-mini',
+  model: 'openai/gpt-4.1-mini',
 });

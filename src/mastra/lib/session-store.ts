@@ -226,20 +226,6 @@ export async function addConversation(
     sql: 'INSERT INTO conversations (session_id, username, comment, response, timestamp) VALUES (?, ?, ?, ?, ?)',
     args: [sessionId, username, comment, response, timestamp],
   });
-
-  // 100件を超えた古い履歴を削除
-  await db.execute({
-    sql: `
-      DELETE FROM conversations
-      WHERE session_id = ? AND id NOT IN (
-        SELECT id FROM conversations
-        WHERE session_id = ?
-        ORDER BY timestamp DESC
-        LIMIT 100
-      )
-    `,
-    args: [sessionId, sessionId],
-  });
 }
 
 export async function getConversations(
