@@ -15,10 +15,19 @@ const inputSchema = z.object({
   comment: z.string().describe('視聴者のコメント内容'),
 });
 
+// セグメントスキーマ
+const segmentSchema = z.object({
+  text: z.string().describe('発話テキスト'),
+  emotion: z.string().describe('感情パラメータ'),
+});
+
 // 出力スキーマ
 const outputSchema = z.object({
-  response: z.string().describe('AITuberの応答'),
-  emotion: z.string().describe('応答時の感情'),
+  segments: z.array(segmentSchema).describe('応答セグメントの配列'),
+  // 後方互換用
+  response: z.string().optional().describe('応答全文（後方互換用）'),
+  emotion: z.string().optional().describe('メイン感情（後方互換用）'),
+  // 共通
   usernameReading: z.string().describe('視聴者名の読み'),
   isFirstTime: z.boolean().describe('初見かどうか'),
   shouldRespond: z.boolean().describe('応答したかどうか'),
@@ -136,6 +145,7 @@ const filterCommentStep = createStep({
       // 応答不要の場合は早期終了
       if (!shouldRespond) {
         return bail({
+          segments: [],
           response: '',
           emotion: 'neutral',
           usernameReading: inputData.usernameReading,
@@ -222,8 +232,7 @@ const generateResponseStep = createStep({
     username: z.string(),
     usernameReading: z.string(),
     comment: z.string(),
-    response: z.string(),
-    emotion: z.string(),
+    segments: z.array(segmentSchema),
     isFirstTime: z.boolean(),
   }),
   execute: async ({ inputData, mastra }) => {
@@ -242,8 +251,7 @@ ${isFirstTime ? '\n※この視聴者は初見です' : ''}`;
     const result = await agent.generate([{ role: 'user', content: prompt }]);
 
     // JSONパース（エージェントはJSON形式で応答、```json```でラップされる場合あり）
-    let response = '';
-    let emotion = 'neutral';
+    let segments: Array<{ text: string; emotion: string }> = [];
     try {
       let jsonText = result.text.trim();
       // ```json ... ``` でラップされている場合は除去
@@ -252,11 +260,35 @@ ${isFirstTime ? '\n※この視聴者は初見です' : ''}`;
         jsonText = jsonMatch[1].trim();
       }
       const parsed = JSON.parse(jsonText);
-      response = parsed.response || '';
-      emotion = parsed.emotion || 'neutral';
+
+      // 新形式（segments配列）
+      if (Array.isArray(parsed.segments)) {
+        segments = parsed.segments.map((seg: { text?: string; emotion?: string }) => ({
+          text: seg.text || '',
+          emotion: seg.emotion || 'neutral',
+        }));
+      }
+      // 旧形式（response/emotion）からの変換（後方互換性）
+      else if (parsed.response) {
+        segments = [{
+          text: parsed.response,
+          emotion: parsed.emotion || 'neutral',
+        }];
+      }
     } catch {
-      // JSONパース失敗時はテキストそのまま使用
-      response = result.text.trim();
+      // JSONパース失敗時は単一セグメントとして扱う
+      segments = [{
+        text: result.text.trim(),
+        emotion: 'neutral',
+      }];
+    }
+
+    // 空セグメントを除去
+    segments = segments.filter(seg => seg.text.trim().length > 0);
+
+    // 最低1セグメントを保証
+    if (segments.length === 0) {
+      segments = [{ text: '...', emotion: 'neutral' }];
     }
 
     return {
@@ -264,8 +296,7 @@ ${isFirstTime ? '\n※この視聴者は初見です' : ''}`;
       username,
       usernameReading,
       comment,
-      response,
-      emotion,
+      segments,
       isFirstTime,
     };
   },
@@ -280,21 +311,27 @@ const saveConversationStep = createStep({
     username: z.string(),
     usernameReading: z.string(),
     comment: z.string(),
-    response: z.string(),
-    emotion: z.string(),
+    segments: z.array(segmentSchema),
     isFirstTime: z.boolean(),
   }),
   outputSchema,
   execute: async ({ inputData }) => {
-    const { sessionId, username, usernameReading, comment, response, emotion, isFirstTime } =
+    const { sessionId, username, usernameReading, comment, segments, isFirstTime } =
       inputData;
 
+    // セグメントを連結して応答全文を作成（履歴表示用）
+    const fullResponse = segments.map(s => s.text).join(' ');
+
     // 会話履歴を保存
-    await addConversation(sessionId, username, comment, response);
+    await addConversation(sessionId, username, comment, fullResponse);
+
+    // 後方互換性のため response/emotion も返す
+    const mainEmotion = segments[0]?.emotion || 'neutral';
 
     return {
-      response,
-      emotion,
+      segments,
+      response: fullResponse,
+      emotion: mainEmotion,
       usernameReading,
       isFirstTime,
       shouldRespond: true,
